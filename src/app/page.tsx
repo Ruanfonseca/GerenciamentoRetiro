@@ -7,6 +7,11 @@ import {
   CardActions,
   CardContent,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
   List,
   ListItem,
@@ -36,6 +41,8 @@ export default function Home() {
     nomeCompleto: '',
     telefone: ''
   });
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [membroParaDeletar, setMembroParaDeletar] = useState<string | null>(null);
 
   useEffect(() => {
     buscarMembros();
@@ -103,9 +110,22 @@ export default function Home() {
     }
   };
 
-  const handleDeletar = async (index: number) => {
-    await deletarMembro(membros[index].id);
-    buscarMembros();
+  const handleOpenDialog = (id: string) => {
+    setMembroParaDeletar(id);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setMembroParaDeletar(null);
+  };
+
+  const handleConfirmarDeletar = async () => {
+    if (membroParaDeletar) {
+      await deletarMembro(membroParaDeletar);
+      buscarMembros();
+    }
+    handleCloseDialog();
   };
 
   const formatarTelefone = (telefone: string) => {
@@ -201,7 +221,7 @@ export default function Home() {
                     <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
                       <Edit />
                     </IconButton>
-                    <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
+                    <IconButton edge="end" onClick={() => handleOpenDialog(membro.id)} color="error">
                       <Delete />
                     </IconButton>
                   </ListItemSecondaryAction>
@@ -211,6 +231,23 @@ export default function Home() {
           ))}
         </List>
       </Card>
+
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Tem certeza?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Você tem certeza que deseja excluir este retirante? Essa ação não pode ser desfeita.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirmarDeletar} color="error">
+            Deletar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
