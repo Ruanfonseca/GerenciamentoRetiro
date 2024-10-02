@@ -7,8 +7,9 @@ interface Membro {
   id: string;
   nomeCompleto: string;
   telefone: string;
-  statusPagamento: 'pendente' | 'finalizado';
+  statusPagamento: 'pendente' | '1º Lote' | '2º Lote' | '3º Lote' | 'finalizado';
 }
+
 
 const nomeColecao = 'membros';
 

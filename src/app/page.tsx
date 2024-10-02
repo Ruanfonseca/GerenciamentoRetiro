@@ -22,9 +22,8 @@ interface Membro {
   id: string;
   nomeCompleto: string;
   telefone: string;
-  statusPagamento: 'pendente' | '1º Lote' | '2º Lote' | '3º Lote' | 'finalizado'; // Adicionar 'pendente'
+  statusPagamento?: 'pendente' | '1º Lote' | '2º Lote' | '3º Lote' | 'finalizado';
 }
-
 
 export default function Home() {
   const [membros, setMembros] = useState<Membro[]>([]);
@@ -49,12 +48,11 @@ export default function Home() {
 
   const handleCriar = async () => {
     if (novoMembro.nomeCompleto.trim() !== '' && novoMembro.telefone.trim() !== '') {
-      await criarMembro({ ...novoMembro, statusPagamento: 'pendente' }); // Status inicial 'pendente'
+      await criarMembro({ ...novoMembro, statusPagamento: 'pendente' });
       setNovoMembro({ nomeCompleto: '', telefone: '' });
       buscarMembros();
     }
   };
-  
 
   const handleEditar = (index: number) => {
     setEditandoIndex(index);
@@ -64,8 +62,12 @@ export default function Home() {
 
   const handleSalvarEdicao = async () => {
     if (editandoIndex !== null) {
-      const membroAtualizado = { ...membros[editandoIndex], ...membroEditado };
-      await atualizarMembro(membroAtualizado.id, membroAtualizado);
+      const membroAtualizado: Partial<Membro> = {
+        nomeCompleto: membroEditado.nomeCompleto,
+        telefone: membroEditado.telefone,
+      };
+      const membroAtual = membros[editandoIndex];
+      await atualizarMembro(membroAtual.id, { ...membroAtual, ...membroAtualizado });
       setEditandoIndex(null);
       buscarMembros();
     }
@@ -76,32 +78,30 @@ export default function Home() {
     setMembroEditado({ nomeCompleto: '', telefone: '' });
   };
 
- // Função para avançar o status do pagamento
-const handleAvancarPagamento = async (index: number) => {
-  const membroAtualizado = { ...membros[index] };
-  
-  // Lógica de avanço do status
-  switch (membroAtualizado.statusPagamento) {
-    case 'pendente':
-      membroAtualizado.statusPagamento = '1º Lote';
-      break;
-    case '1º Lote':
-      membroAtualizado.statusPagamento = '2º Lote';
-      break;
-    case '2º Lote':
-      membroAtualizado.statusPagamento = '3º Lote';
-      break;
-    case '3º Lote':
-      membroAtualizado.statusPagamento = 'finalizado';
-      break;
-    default:
-      return; // Caso o status já seja 'finalizado', não faz nada
-  }
+  const getProximoStatus = (statusAtual?: 'pendente' | '1º Lote' | '2º Lote' | '3º Lote' | 'finalizado'): 'pendente' | '1º Lote' | '2º Lote' | '3º Lote' | 'finalizado' | undefined => {
+    switch (statusAtual) {
+      case 'pendente':
+        return '1º Lote';
+      case '1º Lote':
+        return '2º Lote';
+      case '2º Lote':
+        return '3º Lote';
+      case '3º Lote':
+        return 'finalizado';
+      default:
+        return statusAtual;
+    }
+  };
 
-  await atualizarMembro(membroAtualizado.id, membroAtualizado);
-  buscarMembros();
-};
-
+  const handleAvancarPagamento = async (index: number) => {
+    const membro = membros[index];
+    const proximoStatus = getProximoStatus(membro.statusPagamento);
+    
+    if (proximoStatus && proximoStatus !== membro.statusPagamento) {
+      await atualizarMembro(membro.id, { statusPagamento: proximoStatus });
+      buscarMembros();
+    }
+  };
 
   const handleDeletar = async (index: number) => {
     await deletarMembro(membros[index].id);
@@ -117,6 +117,9 @@ const handleAvancarPagamento = async (index: number) => {
       ? `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 6)}-${apenasNumeros.slice(6)}`
       : apenasNumeros;
   };
+
+  // Ordenar membros por nome completo antes de renderizar
+  const membrosOrdenados = [...membros].sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto));
 
   return (
     <Container>
@@ -158,7 +161,7 @@ const handleAvancarPagamento = async (index: number) => {
       </Typography>
 
       <List>
-        {membros.map((membro, index) => (
+        {membrosOrdenados.map((membro, index) => (
           <ListItem key={index} sx={{ mb: 2 }}>
             {editandoIndex === index ? (
               <>
