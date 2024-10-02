@@ -5,13 +5,13 @@ import { getFirestore } from 'firebase/firestore';
 
 // Configuração do Firebase da sua aplicação
 const firebaseConfig = {
-  apiKey: "AIzaSyB1o5IEGVTb7ym5rv8rXXABGtbgBdgxKgw",
-  authDomain: "quedmark.firebaseapp.com",
-  projectId: "quedmark",
-  storageBucket: "quedmark.appspot.com",
-  messagingSenderId: "263643571871",
-  appId: "1:263643571871:web:6842929104af6085c5a4aa",
-  measurementId: "G-ZGNYRGKPZB"
+  apiKey: "AIzaSyD40Z3XKOsUtxPt0Lw47gfPjKO2OEYe49s",
+  authDomain: "retiro-a725b.firebaseapp.com",
+  projectId: "retiro-a725b",
+  storageBucket: "retiro-a725b.appspot.com",
+  messagingSenderId: "911170945144",
+  appId: "1:911170945144:web:25dbc38bff84f3cd5f6d8d",
+  measurementId: "G-GXMV7456XV"
 };
 
 // Inicializa o Firebase
