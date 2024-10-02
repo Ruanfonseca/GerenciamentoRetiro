@@ -1,101 +1,225 @@
-import Image from "next/image";
+'use client';
+import { Cancel, CheckCircle, Delete, Edit, Save } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Container,
+  IconButton,
+  List,
+  ListItem,
+  ListItemSecondaryAction,
+  ListItemText,
+  TextField,
+  Typography
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import InputMask from 'react-input-mask';
+import { atualizarMembro, criarMembro, deletarMembro, obterMembros } from './services/crudservice';
+
+interface Membro {
+  id: string;
+  nomeCompleto: string;
+  telefone: string;
+  statusPagamento: 'pendente' | 'finalizado';
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [membros, setMembros] = useState<Membro[]>([]);
+  const [novoMembro, setNovoMembro] = useState<{ nomeCompleto: string; telefone: string }>({
+    nomeCompleto: '',
+    telefone: ''
+  });
+  const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
+  const [membroEditado, setMembroEditado] = useState<{ nomeCompleto: string; telefone: string }>({
+    nomeCompleto: '',
+    telefone: ''
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    buscarMembros();
+  }, []);
+
+  const buscarMembros = async () => {
+    const membrosObtidos = await obterMembros();
+    setMembros(membrosObtidos);
+  };
+
+  const handleCriar = async () => {
+    if (novoMembro.nomeCompleto.trim() !== '' && novoMembro.telefone.trim() !== '') {
+      await criarMembro({ ...novoMembro, statusPagamento: 'pendente' });
+      setNovoMembro({ nomeCompleto: '', telefone: '' });
+      buscarMembros();
+    }
+  };
+
+  const handleEditar = (index: number) => {
+    setEditandoIndex(index);
+    const membro = membros[index];
+    setMembroEditado({ nomeCompleto: membro.nomeCompleto, telefone: membro.telefone });
+  };
+
+  const handleSalvarEdicao = async () => {
+    if (editandoIndex !== null) {
+      const membroAtualizado = { ...membros[editandoIndex], ...membroEditado };
+      await atualizarMembro(membroAtualizado.id, membroAtualizado);
+      setEditandoIndex(null);
+      buscarMembros();
+    }
+  };
+
+  const handleCancelarEdicao = () => {
+    setEditandoIndex(null);
+    setMembroEditado({ nomeCompleto: '', telefone: '' });
+  };
+
+  const handleAtualizarStatus = async (index: number, status: 'pendente' | 'finalizado') => {
+    const membroAtualizado = { ...membros[index], statusPagamento: status };
+    await atualizarMembro(membroAtualizado.id, membroAtualizado);
+    buscarMembros();
+  };
+
+  const handleDeletar = async (index: number) => {
+    await deletarMembro(membros[index].id);
+    buscarMembros();
+  };
+
+  return (
+    <Container>
+      <Typography variant="h4" component="h1" align="center" gutterBottom>
+        Gerenciamento de Retirantes - Retiro 2025
+      </Typography>
+
+      <Card sx={{ maxWidth: 500, margin: '0 auto', marginBottom: 4 }}>
+        <CardContent>
+          <Typography variant="h5" component="h2" gutterBottom>
+            Adicionar Novo Membro
+          </Typography>
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Nome Completo"
+              value={novoMembro.nomeCompleto}
+              onChange={(e) => setNovoMembro({ ...novoMembro, nomeCompleto: e.target.value })}
+              variant="outlined"
+              fullWidth
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            <InputMask
+              mask="(99) 99999-9999"
+              value={novoMembro.telefone}
+              onChange={(e: any) => setNovoMembro({ ...novoMembro, telefone: e.target.value })}
+            >
+              {() => <TextField label="Telefone" variant="outlined" fullWidth />}
+            </InputMask>
+          </Box>
+        </CardContent>
+        <CardActions>
+          <Button variant="contained" color="primary" fullWidth onClick={handleCriar}>
+            Adicionar Membro
+          </Button>
+        </CardActions>
+      </Card>
+
+      <Typography variant="h6" gutterBottom>
+        Membros com Pagamento Pendente
+      </Typography>
+      <List>
+        {membros
+          .filter((membro) => membro.statusPagamento === 'pendente')
+          .map((membro, index) => (
+            <ListItem key={index}>
+              {editandoIndex === index ? (
+                <>
+                  <TextField
+                    value={membroEditado.nomeCompleto}
+                    onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
+                    variant="outlined"
+                    fullWidth
+                  />
+                  <InputMask
+                    mask="(99) 99999-9999"
+                    value={membroEditado.telefone}
+                    onChange={(e: any) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
+                  >
+                    {() => <TextField variant="outlined" fullWidth />}
+                  </InputMask>
+                  <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
+                    <Save />
+                  </IconButton>
+                  <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
+                    <Cancel />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <ListItemText primary={`${membro.nomeCompleto} - ${membro.telefone}`} />
+                  <ListItemSecondaryAction>
+                    <IconButton edge="end" onClick={() => handleAtualizarStatus(index, 'finalizado')} color="success">
+                      <CheckCircle />
+                    </IconButton>
+                    <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
+                      <Edit />
+                    </IconButton>
+                    <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
+                      <Delete />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </>
+              )}
+            </ListItem>
+          ))}
+      </List>
+
+      <Typography variant="h6" gutterBottom>
+        Membros com Pagamento Finalizado
+      </Typography>
+      <List>
+        {membros
+          .filter((membro) => membro.statusPagamento === 'finalizado')
+          .map((membro, index) => (
+            <ListItem key={index}>
+              {editandoIndex === index ? (
+                <>
+                  <TextField
+                    value={membroEditado.nomeCompleto}
+                    onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
+                    variant="outlined"
+                    fullWidth
+                  />
+                  <InputMask
+                    mask="(99) 99999-9999"
+                    value={membroEditado.telefone}
+                    onChange={(e: any) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
+                  >
+                    {() => <TextField variant="outlined" fullWidth />}
+                  </InputMask>
+                  <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
+                    <Save />
+                  </IconButton>
+                  <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
+                    <Cancel />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <ListItemText primary={`${membro.nomeCompleto} - ${membro.telefone}`} />
+                  <ListItemSecondaryAction>
+                    <IconButton edge="end" onClick={() => handleAtualizarStatus(index, 'pendente')} color="warning">
+                      <Cancel />
+                    </IconButton>
+                    <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
+                      <Edit />
+                    </IconButton>
+                    <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
+                      <Delete />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </>
+              )}
+            </ListItem>
+          ))}
+      </List>
+    </Container>
   );
 }
