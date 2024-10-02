@@ -160,55 +160,57 @@ export default function Home() {
         Membros - Status de Pagamento
       </Typography>
 
-      <List>
-        {membrosOrdenados.map((membro, index) => (
-          <ListItem key={index} sx={{ mb: 2 }}>
-            {editandoIndex === index ? (
-              <>
-                <TextField
-                  value={membroEditado.nomeCompleto}
-                  onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
-                  variant="outlined"
-                  fullWidth
-                />
-                <TextField
-                  label="Telefone"
-                  variant="outlined"
-                  fullWidth
-                  value={membroEditado.telefone}
-                  onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
-                />
-                <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
-                  <Save />
-                </IconButton>
-                <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
-                  <Cancel />
-                </IconButton>
-              </>
-            ) : (
-              <>
-                <ListItemText
-                  primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`}
-                  secondary={`Status: ${membro.statusPagamento}`}
-                />
-                <ListItemSecondaryAction>
-                  {membro.statusPagamento !== 'finalizado' && (
-                    <IconButton edge="end" onClick={() => handleAvancarPagamento(index)} color="success">
-                      <CheckCircle />
+      <Card sx={{ maxWidth: 500, margin: '0 auto', overflow: 'auto', maxHeight: 300 }}>
+        <List>
+          {membrosOrdenados.map((membro, index) => (
+            <ListItem key={index} sx={{ mb: 2 }}>
+              {editandoIndex === index ? (
+                <>
+                  <TextField
+                    value={membroEditado.nomeCompleto}
+                    onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
+                    variant="outlined"
+                    fullWidth
+                  />
+                  <TextField
+                    label="Telefone"
+                    variant="outlined"
+                    fullWidth
+                    value={membroEditado.telefone}
+                    onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
+                  />
+                  <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
+                    <Save />
+                  </IconButton>
+                  <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
+                    <Cancel />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <ListItemText
+                    primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`}
+                    secondary={`Status: ${membro.statusPagamento}`}
+                  />
+                  <ListItemSecondaryAction>
+                    {membro.statusPagamento !== 'finalizado' && (
+                      <IconButton edge="end" onClick={() => handleAvancarPagamento(index)} color="success">
+                        <CheckCircle />
+                      </IconButton>
+                    )}
+                    <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
+                      <Edit />
                     </IconButton>
-                  )}
-                  <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
-                    <Edit />
-                  </IconButton>
-                  <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
-                    <Delete />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </>
-            )}
-          </ListItem>
-        ))}
-      </List>
+                    <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
+                      <Delete />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </>
+              )}
+            </ListItem>
+          ))}
+        </List>
+      </Card>
     </Container>
   );
 }
