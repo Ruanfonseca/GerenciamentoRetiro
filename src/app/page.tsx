@@ -16,7 +16,6 @@ import {
   Typography
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import InputMask from 'react-input-mask';
 import { atualizarMembro, criarMembro, deletarMembro, obterMembros } from './services/crudservice';
 
 interface Membro {
@@ -86,6 +85,16 @@ export default function Home() {
     buscarMembros();
   };
 
+  const formatarTelefone = (telefone: string) => {
+    const apenasNumeros = telefone.replace(/\D/g, '');
+    if (apenasNumeros.length > 10) {
+      return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7, 11)}`;
+    }
+    return apenasNumeros.length > 6
+      ? `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 6)}-${apenasNumeros.slice(6)}`
+      : apenasNumeros;
+  };
+
   return (
     <Container>
       <Typography variant="h4" component="h1" align="center" gutterBottom>
@@ -105,13 +114,13 @@ export default function Home() {
               variant="outlined"
               fullWidth
             />
-            <InputMask
-              mask="(99) 99999-9999"
+            <TextField
+              label="Telefone"
+              variant="outlined"
+              fullWidth
               value={novoMembro.telefone}
-              onChange={(e: any) => setNovoMembro({ ...novoMembro, telefone: e.target.value })}
-            >
-              {() => <TextField label="Telefone" variant="outlined" fullWidth />}
-            </InputMask>
+              onChange={(e) => setNovoMembro({ ...novoMembro, telefone: e.target.value })}
+            />
           </Box>
         </CardContent>
         <CardActions>
@@ -137,13 +146,13 @@ export default function Home() {
                     variant="outlined"
                     fullWidth
                   />
-                  <InputMask
-                    mask="(99) 99999-9999"
+                  <TextField
+                    label="Telefone"
+                    variant="outlined"
+                    fullWidth
                     value={membroEditado.telefone}
-                    onChange={(e: any) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
-                  >
-                    {() => <TextField variant="outlined" fullWidth />}
-                  </InputMask>
+                    onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
+                  />
                   <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
                     <Save />
                   </IconButton>
@@ -153,7 +162,7 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <ListItemText primary={`${membro.nomeCompleto} - ${membro.telefone}`} />
+                  <ListItemText primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`} />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" onClick={() => handleAtualizarStatus(index, 'finalizado')} color="success">
                       <CheckCircle />
@@ -187,13 +196,13 @@ export default function Home() {
                     variant="outlined"
                     fullWidth
                   />
-                  <InputMask
-                    mask="(99) 99999-9999"
+                  <TextField
+                    label="Telefone"
+                    variant="outlined"
+                    fullWidth
                     value={membroEditado.telefone}
-                    onChange={(e: any) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
-                  >
-                    {() => <TextField variant="outlined" fullWidth />}
-                  </InputMask>
+                    onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
+                  />
                   <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
                     <Save />
                   </IconButton>
@@ -203,7 +212,7 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <ListItemText primary={`${membro.nomeCompleto} - ${membro.telefone}`} />
+                  <ListItemText primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`} />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" onClick={() => handleAtualizarStatus(index, 'pendente')} color="warning">
                       <Cancel />
