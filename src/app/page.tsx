@@ -130,7 +130,7 @@ export default function Home() {
       <Card sx={{ maxWidth: 500, margin: '0 auto', marginBottom: 4 }}>
         <CardContent>
           <Typography variant="h5" component="h2" gutterBottom>
-            Adicionar Novo Membro
+            Adicionar Novo Retirante
           </Typography>
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
@@ -151,13 +151,13 @@ export default function Home() {
         </CardContent>
         <CardActions>
           <Button variant="contained" color="primary" fullWidth onClick={handleCriar}>
-            Adicionar Membro
+            Adicionar Retirante
           </Button>
         </CardActions>
       </Card>
 
       <Typography variant="h6" gutterBottom>
-        Membros - Status de Pagamento
+        Retirante - Status de Pagamento
       </Typography>
 
       <Card sx={{ maxWidth: 500, margin: '0 auto', overflow: 'auto', maxHeight: 300 }}>
