@@ -22,8 +22,9 @@ interface Membro {
   id: string;
   nomeCompleto: string;
   telefone: string;
-  statusPagamento: 'pendente' | 'finalizado';
+  statusPagamento: 'pendente' | '1º Lote' | '2º Lote' | '3º Lote' | 'finalizado'; // Adicionar 'pendente'
 }
+
 
 export default function Home() {
   const [membros, setMembros] = useState<Membro[]>([]);
@@ -48,11 +49,12 @@ export default function Home() {
 
   const handleCriar = async () => {
     if (novoMembro.nomeCompleto.trim() !== '' && novoMembro.telefone.trim() !== '') {
-      await criarMembro({ ...novoMembro, statusPagamento: 'pendente' });
+      await criarMembro({ ...novoMembro, statusPagamento: 'pendente' }); // Status inicial 'pendente'
       setNovoMembro({ nomeCompleto: '', telefone: '' });
       buscarMembros();
     }
   };
+  
 
   const handleEditar = (index: number) => {
     setEditandoIndex(index);
@@ -74,11 +76,32 @@ export default function Home() {
     setMembroEditado({ nomeCompleto: '', telefone: '' });
   };
 
-  const handleAtualizarStatus = async (index: number, status: 'pendente' | 'finalizado') => {
-    const membroAtualizado = { ...membros[index], statusPagamento: status };
-    await atualizarMembro(membroAtualizado.id, membroAtualizado);
-    buscarMembros();
-  };
+ // Função para avançar o status do pagamento
+const handleAvancarPagamento = async (index: number) => {
+  const membroAtualizado = { ...membros[index] };
+  
+  // Lógica de avanço do status
+  switch (membroAtualizado.statusPagamento) {
+    case 'pendente':
+      membroAtualizado.statusPagamento = '1º Lote';
+      break;
+    case '1º Lote':
+      membroAtualizado.statusPagamento = '2º Lote';
+      break;
+    case '2º Lote':
+      membroAtualizado.statusPagamento = '3º Lote';
+      break;
+    case '3º Lote':
+      membroAtualizado.statusPagamento = 'finalizado';
+      break;
+    default:
+      return; // Caso o status já seja 'finalizado', não faz nada
+  }
+
+  await atualizarMembro(membroAtualizado.id, membroAtualizado);
+  buscarMembros();
+};
+
 
   const handleDeletar = async (index: number) => {
     await deletarMembro(membros[index].id);
@@ -131,103 +154,57 @@ export default function Home() {
       </Card>
 
       <Typography variant="h6" gutterBottom>
-        Membros com Pagamento Pendente
+        Membros - Status de Pagamento
       </Typography>
+
       <List>
-        {membros
-          .filter((membro) => membro.statusPagamento === 'pendente')
-          .map((membro, index) => (
-            <ListItem key={index}>
-              {editandoIndex === index ? (
-                <>
-                  <TextField
-                    value={membroEditado.nomeCompleto}
-                    onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
-                    variant="outlined"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Telefone"
-                    variant="outlined"
-                    fullWidth
-                    value={membroEditado.telefone}
-                    onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
-                  />
-                  <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
-                    <Save />
-                  </IconButton>
-                  <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
-                    <Cancel />
-                  </IconButton>
-                </>
-              ) : (
-                <>
-                  <ListItemText primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`} />
-                  <ListItemSecondaryAction>
-                    <IconButton edge="end" onClick={() => handleAtualizarStatus(index, 'finalizado')} color="success">
+        {membros.map((membro, index) => (
+          <ListItem key={index} sx={{ mb: 2 }}>
+            {editandoIndex === index ? (
+              <>
+                <TextField
+                  value={membroEditado.nomeCompleto}
+                  onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
+                  variant="outlined"
+                  fullWidth
+                />
+                <TextField
+                  label="Telefone"
+                  variant="outlined"
+                  fullWidth
+                  value={membroEditado.telefone}
+                  onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
+                />
+                <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
+                  <Save />
+                </IconButton>
+                <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
+                  <Cancel />
+                </IconButton>
+              </>
+            ) : (
+              <>
+                <ListItemText
+                  primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`}
+                  secondary={`Status: ${membro.statusPagamento}`}
+                />
+                <ListItemSecondaryAction>
+                  {membro.statusPagamento !== 'finalizado' && (
+                    <IconButton edge="end" onClick={() => handleAvancarPagamento(index)} color="success">
                       <CheckCircle />
                     </IconButton>
-                    <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
-                      <Edit />
-                    </IconButton>
-                    <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
-                      <Delete />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </>
-              )}
-            </ListItem>
-          ))}
-      </List>
-
-      <Typography variant="h6" gutterBottom>
-        Membros com Pagamento Finalizado
-      </Typography>
-      <List>
-        {membros
-          .filter((membro) => membro.statusPagamento === 'finalizado')
-          .map((membro, index) => (
-            <ListItem key={index}>
-              {editandoIndex === index ? (
-                <>
-                  <TextField
-                    value={membroEditado.nomeCompleto}
-                    onChange={(e) => setMembroEditado({ ...membroEditado, nomeCompleto: e.target.value })}
-                    variant="outlined"
-                    fullWidth
-                  />
-                  <TextField
-                    label="Telefone"
-                    variant="outlined"
-                    fullWidth
-                    value={membroEditado.telefone}
-                    onChange={(e) => setMembroEditado({ ...membroEditado, telefone: e.target.value })}
-                  />
-                  <IconButton edge="end" onClick={handleSalvarEdicao} color="primary">
-                    <Save />
+                  )}
+                  <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
+                    <Edit />
                   </IconButton>
-                  <IconButton edge="end" onClick={handleCancelarEdicao} color="secondary">
-                    <Cancel />
+                  <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
+                    <Delete />
                   </IconButton>
-                </>
-              ) : (
-                <>
-                  <ListItemText primary={`${membro.nomeCompleto} - ${formatarTelefone(membro.telefone)}`} />
-                  <ListItemSecondaryAction>
-                    <IconButton edge="end" onClick={() => handleAtualizarStatus(index, 'pendente')} color="warning">
-                      <Cancel />
-                    </IconButton>
-                    <IconButton edge="end" onClick={() => handleEditar(index)} color="default">
-                      <Edit />
-                    </IconButton>
-                    <IconButton edge="end" onClick={() => handleDeletar(index)} color="error">
-                      <Delete />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </>
-              )}
-            </ListItem>
-          ))}
+                </ListItemSecondaryAction>
+              </>
+            )}
+          </ListItem>
+        ))}
       </List>
     </Container>
   );
