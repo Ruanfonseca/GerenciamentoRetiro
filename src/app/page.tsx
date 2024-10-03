@@ -20,7 +20,9 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+import { BlobProvider } from '@react-pdf/renderer';
 import { useEffect, useState } from 'react';
+import ListaRetirantesPDF from './components/ListaRetirantesPDF';
 import { atualizarMembro, criarMembro, deletarMembro, obterMembros } from './services/crudservice';
 
 interface Membro {
@@ -43,6 +45,10 @@ export default function Home() {
   });
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [membroParaDeletar, setMembroParaDeletar] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+ 
+
+  
 
   useEffect(() => {
     buscarMembros();
@@ -100,13 +106,14 @@ export default function Home() {
     }
   };
 
-  const handleAvancarPagamento = async (index: number) => {
-    const membro = membros[index];
-    const proximoStatus = getProximoStatus(membro.statusPagamento);
-    
-    if (proximoStatus && proximoStatus !== membro.statusPagamento) {
-      await atualizarMembro(membro.id, { statusPagamento: proximoStatus });
-      buscarMembros();
+  const handleAvancarPagamento = async (id: string) => {
+    const membro = membros.find((membro) => membro.id === id);
+    if (membro) {
+      const proximoStatus = getProximoStatus(membro.statusPagamento);
+      if (proximoStatus && proximoStatus !== membro.statusPagamento) {
+        await atualizarMembro(membro.id, { statusPagamento: proximoStatus });
+        buscarMembros();
+      }
     }
   };
 
@@ -141,6 +148,9 @@ export default function Home() {
   // Ordenar membros por nome completo antes de renderizar
   const membrosOrdenados = [...membros].sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto));
 
+  useEffect(() => {
+    setIsClient(true); // Permite saber que estamos no cliente
+  }, []);
   return (
     <Container>
       <Typography variant="h4" component="h1" align="center" gutterBottom>
@@ -183,7 +193,7 @@ export default function Home() {
       <Card sx={{ maxWidth: 500, margin: '0 auto', overflow: 'auto', maxHeight: 300 }}>
         <List>
           {membrosOrdenados.map((membro, index) => (
-            <ListItem key={index} sx={{ mb: 2 }}>
+            <ListItem key={membro.id} sx={{ mb: 2 }}>
               {editandoIndex === index ? (
                 <>
                   <TextField
@@ -214,7 +224,7 @@ export default function Home() {
                   />
                   <ListItemSecondaryAction>
                     {membro.statusPagamento !== 'finalizado' && (
-                      <IconButton edge="end" onClick={() => handleAvancarPagamento(index)} color="success">
+                      <IconButton edge="end" onClick={() => handleAvancarPagamento(membro.id)} color="success">
                         <CheckCircle />
                       </IconButton>
                     )}
@@ -232,6 +242,21 @@ export default function Home() {
         </List>
       </Card>
 
+      {isClient && ( // Renderiza apenas no lado do cliente
+        <BlobProvider document={<ListaRetirantesPDF membros={membros} />}>
+          {({ url }) => (
+            <a href={url || undefined} download="lista_retirantes.pdf">
+              <Button 
+                variant="contained" 
+                color="primary" 
+                disabled={!url} 
+              >
+                Baixar Lista
+              </Button>
+            </a>
+          )}
+        </BlobProvider>
+      )}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Tem certeza?</DialogTitle>
         <DialogContent>
