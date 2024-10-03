@@ -190,6 +190,10 @@ export default function Home() {
       <Typography variant="h4" component="h1" align="center" gutterBottom>
         Gerenciamento de Retirantes - Retiro 2025
       </Typography>
+         
+      <Typography variant="h6" component="p" align="center" gutterBottom>
+        Total de Retirantes Cadastrados: {membros.length}
+      </Typography>
 
       <Card sx={{ maxWidth: 500, margin: '0 auto', marginBottom: 4 }}>
         <CardContent>

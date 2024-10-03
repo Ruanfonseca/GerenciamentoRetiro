@@ -25,7 +25,7 @@ export const obterMembros = async (): Promise<Membro[]> => {
   try {
     const snapshot = await getDocs(collection(db, nomeColecao));
     return snapshot.docs.map(doc => ({
-      id: doc.id, // Garantimos que o `id` sempre será uma string.
+      id: doc.id, 
       ...doc.data()
     })) as Membro[];
   } catch (err) {
