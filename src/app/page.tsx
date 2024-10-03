@@ -1,4 +1,4 @@
-'use client';
+"use client"
 import { Cancel, CheckCircle, Delete, Edit, Save } from '@mui/icons-material';
 import {
   Box,
@@ -6,6 +6,7 @@ import {
   Card,
   CardActions,
   CardContent,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -46,24 +47,29 @@ export default function Home() {
   const [openDialog, setOpenDialog] = useState<boolean>(false);
   const [membroParaDeletar, setMembroParaDeletar] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
- 
 
-  
+  // Novos estados para controle dos diálogos de carregamento e sucesso
+  const [loading, setLoading] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     buscarMembros();
   }, []);
 
   const buscarMembros = async () => {
+    setLoading(true); // Ativa o estado de carregamento
     const membrosObtidos = await obterMembros();
     setMembros(membrosObtidos);
+    setLoading(false); // Desativa o estado de carregamento
   };
 
   const handleCriar = async () => {
     if (novoMembro.nomeCompleto.trim() !== '' && novoMembro.telefone.trim() !== '') {
+      setLoading(true);
       await criarMembro({ ...novoMembro, statusPagamento: 'pendente' });
       setNovoMembro({ nomeCompleto: '', telefone: '' });
-      buscarMembros();
+      await buscarMembros();
+      setLoading(false);
     }
   };
 
@@ -75,6 +81,7 @@ export default function Home() {
 
   const handleSalvarEdicao = async () => {
     if (editandoIndex !== null) {
+      setLoading(true); // Ativa o estado de carregamento
       const membroAtualizado: Partial<Membro> = {
         nomeCompleto: membroEditado.nomeCompleto,
         telefone: membroEditado.telefone,
@@ -82,7 +89,9 @@ export default function Home() {
       const membroAtual = membros[editandoIndex];
       await atualizarMembro(membroAtual.id, { ...membroAtual, ...membroAtualizado });
       setEditandoIndex(null);
-      buscarMembros();
+      await buscarMembros();
+      setLoading(false); // Desativa o estado de carregamento
+      setSuccessMessage('Edição do membro realizada com sucesso!'); // Define a mensagem de sucesso
     }
   };
 
@@ -109,11 +118,14 @@ export default function Home() {
   const handleAvancarPagamento = async (id: string) => {
     const membro = membros.find((membro) => membro.id === id);
     if (membro) {
+      setLoading(true); // Ativa o estado de carregamento
       const proximoStatus = getProximoStatus(membro.statusPagamento);
       if (proximoStatus && proximoStatus !== membro.statusPagamento) {
         await atualizarMembro(membro.id, { statusPagamento: proximoStatus });
-        buscarMembros();
+        await buscarMembros();
+        setSuccessMessage('Pagamento atualizado com sucesso!'); // Define a mensagem de sucesso
       }
+      setLoading(false); // Desativa o estado de carregamento
     }
   };
 
@@ -129,8 +141,10 @@ export default function Home() {
 
   const handleConfirmarDeletar = async () => {
     if (membroParaDeletar) {
+      setLoading(true); // Ativa o estado de carregamento
       await deletarMembro(membroParaDeletar);
-      buscarMembros();
+      await buscarMembros();
+      setLoading(false); // Desativa o estado de carregamento
     }
     handleCloseDialog();
   };
@@ -145,14 +159,34 @@ export default function Home() {
       : apenasNumeros;
   };
 
-  // Ordenar membros por nome completo antes de renderizar
-  const membrosOrdenados = [...membros].sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto));
-
   useEffect(() => {
     setIsClient(true); // Permite saber que estamos no cliente
   }, []);
+
+  // Ordenar membros por nome completo antes de renderizar
+  const membrosOrdenados = [...membros].sort((a, b) => a.nomeCompleto.localeCompare(b.nomeCompleto));
+
   return (
     <Container>
+      {/* Loading Dialog */}
+      <Dialog open={loading}>
+        <DialogContent sx={{ display: 'flex', alignItems: 'center' }}>
+          <CircularProgress sx={{ marginRight: 2 }} />
+          <DialogContentText>Carregando...</DialogContentText>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog open={!!successMessage} onClose={() => setSuccessMessage(null)}>
+        <DialogTitle>Sucesso</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{successMessage}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSuccessMessage(null)} color="primary">Ok</Button>
+        </DialogActions>
+      </Dialog>
+
       <Typography variant="h4" component="h1" align="center" gutterBottom>
         Gerenciamento de Retirantes - Retiro 2025
       </Typography>
@@ -186,7 +220,7 @@ export default function Home() {
         </CardActions>
       </Card>
 
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom align="center">
         Retirante - Status de Pagamento
       </Typography>
 
@@ -242,23 +276,20 @@ export default function Home() {
         </List>
       </Card>
 
-      {isClient && ( // Renderiza apenas no lado do cliente
-      <BlobProvider document={<ListaRetirantesPDF membros={membros} />}>
-        {({ url }) => (
-          <Box display="flex" justifyContent="center" alignItems="center" my={2}>
-            <a href={url || undefined} download="lista_retirantes.pdf">
-              <Button 
-                variant="contained" 
-                color="primary" 
-                disabled={!url} 
-              >
-                Baixar Lista
-              </Button>
-            </a>
-          </Box>
-        )}
-      </BlobProvider>
-    )}
+      {isClient && (
+        <BlobProvider document={<ListaRetirantesPDF membros={membros} />}>
+          {({ url }) => (
+            <Box display="flex" justifyContent="center" alignItems="center" my={2}>
+              <a href={url || undefined} download="lista_retirantes.pdf">
+                <Button variant="contained" color="primary" disabled={!url}>
+                  Baixar Lista
+                </Button>
+              </a>
+            </Box>
+          )}
+        </BlobProvider>
+      )}
+
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Tem certeza?</DialogTitle>
         <DialogContent>
