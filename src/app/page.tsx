@@ -243,8 +243,9 @@ export default function Home() {
       </Card>
 
       {isClient && ( // Renderiza apenas no lado do cliente
-        <BlobProvider document={<ListaRetirantesPDF membros={membros} />}>
-          {({ url }) => (
+      <BlobProvider document={<ListaRetirantesPDF membros={membros} />}>
+        {({ url }) => (
+          <Box display="flex" justifyContent="center" alignItems="center" my={2}>
             <a href={url || undefined} download="lista_retirantes.pdf">
               <Button 
                 variant="contained" 
@@ -254,9 +255,10 @@ export default function Home() {
                 Baixar Lista
               </Button>
             </a>
-          )}
-        </BlobProvider>
-      )}
+          </Box>
+        )}
+      </BlobProvider>
+    )}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Tem certeza?</DialogTitle>
         <DialogContent>
